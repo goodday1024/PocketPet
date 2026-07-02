@@ -51,7 +51,7 @@ struct AchievementsView: View {
         return HStack(spacing: 12) {
             Text(a.icon).font(.title2)
                 .frame(width: 40, height: 40)
-                .background(unlocked ? Color(hex: a.accentHex()) : Color.gray.opacity(0.15),
+                .background((unlocked ? (Color(hex: a.accentHex()) ?? .orange) : Color.gray.opacity(0.15)),
                             in: RoundedRectangle(cornerRadius: 10))
                 .opacity(unlocked ? 1 : 0.6)
             VStack(alignment: .leading, spacing: 4) {
@@ -66,7 +66,7 @@ struct AchievementsView: View {
                 Text(a.detail).font(.caption).foregroundStyle(.secondary)
                 if !unlocked {
                     ProgressView(value: progress)
-                        .tint(Color(hex: a.accentHex()))
+                        .tint(Color(hex: a.accentHex()) ?? .orange)
                 }
             }
         }

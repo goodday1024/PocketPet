@@ -92,7 +92,7 @@ public enum PixelCat {
         let newH = h + abs(dy)
         let offX = dx >= 0 ? dx : 0
         let offY = dy >= 0 ? dy : 0
-        var grid = Array(repeating: Array(repeating: Character("."), count: newW), as: [[Character]])
+        var grid: [[Character]] = Array(repeating: Array(repeating: Character("."), count: newW), count: newH)
         for y in 0..<h {
             for x in 0..<w {
                 if let ch = sprite.character(at: x, y: y), ch != "." {

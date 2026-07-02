@@ -55,7 +55,7 @@ struct LockScreenView: View {
                 Text(state.displayName)
                     .font(.caption)
                     .padding(.horizontal, 8).padding(.vertical, 3)
-                    .background(Color(hex: state.accentHex)?.opacity(0.2), in: Capsule())
+                    .background((Color(hex: state.accentHex) ?? .orange).opacity(0.2), in: Capsule())
             }
             ExpandedPetSceneView(state: state,
                                  species: species,
@@ -64,7 +64,7 @@ struct LockScreenView: View {
                                  startedAt: context.state.startedAt)
         }
         .padding()
-        .activityBackgroundTint(Color(hex: state.accentHex)?.opacity(0.15))
-        .activitySystemActionForegroundColor(Color(hex: state.accentHex))
+        .activityBackgroundTint((Color(hex: state.accentHex) ?? .orange).opacity(0.15))
+        .activitySystemActionForegroundColor(Color(hex: state.accentHex) ?? .orange)
     }
 }

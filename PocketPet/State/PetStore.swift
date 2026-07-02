@@ -159,11 +159,6 @@ public final class PetStore: ObservableObject {
         }
         liveActivityActive = false
     }
-
-    deinit {
-        ticker?.invalidate()
-        idleTimer?.invalidate()
-    }
 }
 
 public extension PetState {
