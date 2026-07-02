@@ -1,0 +1,27 @@
+# Build artifacts
+build/
+DerivedData/
+*.xcarchive
+Payload/
+*.ipa
+*.zip
+
+# Xcode
+*.xcodeproj/
+!project.yml
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.swp
+
+# SPM / misc
+.DerivedData/
+.build/
+Pods/
+*.resolved
+.DS_Store
+
+# Secrets
+*.p12
+*.mobileprovision
+.env
