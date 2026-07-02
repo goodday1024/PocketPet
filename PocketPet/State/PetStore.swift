@@ -19,9 +19,9 @@ public final class PetStore: ObservableObject {
 
     /// 空闲多久（无任何场景）后进入打盹。
     private let idleToSleep: TimeInterval = 30
-    private var idleTimer: Timer?
+    private var idleTask: Task<Void, Never>?
     private var stateStartedAt: Date = .init()
-    private var ticker: Timer?
+    private var tickerTask: Task<Void, Never>?
 
     public init(pet: Pet = Pet(name: "咪咪", species: .orangeCat)) {
         self.pet = pet
@@ -36,7 +36,7 @@ public final class PetStore: ObservableObject {
     public func enter(_ state: PetState,
                       title: String = "",
                       subtitle: String = "",
-                      startLiveActivity: Bool = true) {
+                      presentLiveActivity: Bool = true) {
         flushCurrentDuration()
         currentState = state
         stateStartedAt = Date()
@@ -47,7 +47,7 @@ public final class PetStore: ObservableObject {
         // 计次类（导航 / 消息）立即 +1
         if state == .navigating { achievements.incrementCount(for: .navigation) }
 
-        if startLiveActivity {
+        if presentLiveActivity {
             startLiveActivity(for: state)
         }
         resetIdleTimer()
@@ -72,10 +72,11 @@ public final class PetStore: ObservableObject {
     // MARK: - 空闲 -> 打盹
 
     private func resetIdleTimer() {
-        idleTimer?.invalidate()
+        idleTask?.cancel()
         if currentState == .idle || currentState == .sleeping {
-            idleTimer = Timer.scheduledTimer(withTimeInterval: idleToSleep, repeats: false) { [weak self] _ in
-                Task { @MainActor in self?.fallAsleep() }
+            idleTask = Task { @MainActor in
+                try? await Task.sleep(for: .seconds(idleToSleep))
+                if !Task.isCancelled { fallAsleep() }
             }
         }
     }
@@ -93,9 +94,12 @@ public final class PetStore: ObservableObject {
     // MARK: - 时长上报
 
     private func startTicker() {
-        ticker?.invalidate()
-        ticker = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.flushCurrentDuration() }
+        tickerTask?.cancel()
+        tickerTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(5))
+                if !Task.isCancelled { flushCurrentDuration() }
+            }
         }
     }
 

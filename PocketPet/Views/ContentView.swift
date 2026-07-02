@@ -15,7 +15,7 @@ struct ContentView: View {
         .overlay(alignment: .top) {
             if let t = toast { AchievementToast(achievement: t) }
         }
-        .task { pollUnlocked() }
+        .task { await pollUnlocked() }
     }
 
     /// 轮询新解锁的成就并弹出提示。

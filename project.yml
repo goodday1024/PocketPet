@@ -2,7 +2,7 @@ name: PocketPet
 options:
   bundleIdPrefix: com.goodday1024
   deploymentTarget:
-    iOS: "16.1"
+    iOS: "16.2"
   createIntermediateGroups: true
   groupSortPosition: top
 
