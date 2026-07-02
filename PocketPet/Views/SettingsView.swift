@@ -86,7 +86,11 @@ struct SettingsView: View {
     }
 
     private var experienceSection: some View {
-        Section("settings.experience") {
+        Section {
+            Toggle("settings.keepIsland", isOn: Binding(
+                get: { store.keepOnIsland },
+                set: { store.setKeepOnIsland($0) }
+            ))
             Toggle("settings.haptics", isOn: $hapticsEnabled)
             HStack {
                 Text("settings.streak")
@@ -100,6 +104,11 @@ struct SettingsView: View {
                 Text(formatTime(store.achievements.metrics.loyaltySeconds))
                     .foregroundStyle(.secondary)
             }
+        } header: {
+            Text("settings.experience")
+        } footer: {
+            Text("settings.keepIsland.hint")
+                .font(.caption2)
         }
     }
 

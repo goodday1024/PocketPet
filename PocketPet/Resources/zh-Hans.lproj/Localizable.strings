@@ -123,3 +123,5 @@
 "settings.reset.confirm.body" = "这将清除所有陪伴记录、成就与已解锁宠物，且无法恢复。确定继续吗？";
 "settings.reset.confirm.confirm" = "重置";
 "settings.reset.confirm.cancel" = "取消";
+"settings.keepIsland" = "常驻灵动岛";
+"settings.keepIsland.hint" = "开启后小猫会一直显示在灵动岛上。系统对单次实时活动有时长限制，App 在前台时会自动恢复；如长时间不见，重新打开 App 即可。";

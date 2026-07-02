@@ -19,22 +19,32 @@ public final class PetStore: ObservableObject {
     @Published public var scenarioSubtitle: String = ""
     /// 新解锁的宠物（待提示）。
     @Published public var newlyUnlockedPets: [PetSpecies] = []
+    /// 是否让小猫常驻灵动岛（默认开启）。
+    @Published public var keepOnIsland: Bool {
+        didSet { UserDefaults.standard.set(keepOnIsland, forKey: keepOnIslandKey) }
+    }
 
     /// 当前宠物（绑定到 profile）。
     public var pet: Pet { profile.currentPet }
 
     /// 空闲多久（无任何场景）后进入打盹。
     private let idleToSleep: TimeInterval = 30
+    private let keepOnIslandKey = "PocketPet.keepOnIsland.v1"
     private var idleTask: Task<Void, Never>?
     private var stateStartedAt: Date = .init()
     private var tickerTask: Task<Void, Never>?
+    /// 续期任务：iOS Live Activity 默认 8 小时（无推送）自动结束，
+    /// App 在前台时定期检查并重启，让小猫“一直保持在灵动岛上”。
+    private var keepAliveTask: Task<Void, Never>?
 
     public init(profile: ProfileStore, achievements: AchievementStore) {
         self.profile = profile
         self.achievements = achievements
         self.stateStartedAt = Date()
         self.scenarioTitle = PetState.idle.defaultTitle
+        self.keepOnIsland = UserDefaults.standard.object(forKey: "PocketPet.keepOnIsland.v1") as? Bool ?? true
         startTicker()
+        startKeepAlive()
         resetIdleTimer()
     }
 
@@ -57,21 +67,26 @@ public final class PetStore: ObservableObject {
         if state == .navigating { achievements.incrementCount(for: .navigation) }
 
         if presentLiveActivity {
-            startLiveActivity(for: state)
+            updateOrStartLiveActivity(for: state)
         }
         resetIdleTimer()
         checkPetUnlocks()
     }
 
-    /// 结束当前场景，回到待机；若一段时间无操作则进入打盹。
+    /// 结束当前场景，回到待机。
+    /// 开启常驻时仅把灵动岛更新为待机，**不结束** Live Activity，让小猫一直留在灵动岛。
     public func endScenario() {
         flushCurrentDuration()
-        endLiveActivity()
         currentState = .idle
         stateStartedAt = Date()
         scenarioTitle = PetState.idle.defaultTitle
         scenarioSubtitle = ""
         Haptics.light()
+        if keepOnIsland {
+            updateOrStartLiveActivity(for: .idle)
+        } else {
+            endLiveActivity()
+        }
         resetIdleTimer()
         checkPetUnlocks()
     }
@@ -151,12 +166,49 @@ public final class PetStore: ObservableObject {
 
     // MARK: - Live Activity
 
+    /// 统一入口：有活动中的 LA 就更新，没有就新启动一个。
+    /// 这是实现“常驻灵动岛”的核心 —— 不再每次都先 end 再 start。
+    private func updateOrStartLiveActivity(for state: PetState) {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            liveActivityActive = false
+            return
+        }
+        if let existing = Activity<PetActivityAttributes>.activities.first {
+            let content = PetActivityContentState(
+                state: state,
+                title: scenarioTitle,
+                subtitle: scenarioSubtitle,
+                startedAt: Date(),
+                accentHex: state.accentHex
+            )
+            Task { await existing.update(ActivityContent(state: content, staleDate: nil)) }
+            liveActivityActive = true
+        } else {
+            startLiveActivity(for: state)
+        }
+    }
+
+    /// 让小猫（重新）登上灵动岛。App 进入前台、或开启常驻开关时调用。
+    public func ensureLiveActivity() {
+        guard keepOnIsland, ActivityAuthorizationInfo().areActivitiesEnabled else {
+            liveActivityActive = false
+            return
+        }
+        // 已有活动 LA：仅在内容过时时刷新一次（例如长时间后台后回到前台）。
+        if Activity<PetActivityAttributes>.activities.first != nil {
+            liveActivityActive = true
+            updateLiveActivity(to: currentState, title: scenarioTitle, subtitle: scenarioSubtitle)
+            return
+        }
+        startLiveActivity(for: currentState)
+    }
+
     private func startLiveActivity(for state: PetState) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else {
             liveActivityActive = false
             return
         }
-        // 同一时间只保留一个宠物 Live Activity：先结束旧的
+        // 同一时间只保留一个宠物 Live Activity：先结束残留的旧的。
         for activity in Activity<PetActivityAttributes>.activities {
             Task { await activity.end(nil, dismissalPolicy: .immediate) }
         }
@@ -188,6 +240,31 @@ public final class PetStore: ObservableObject {
             accentHex: state.accentHex
         )
         Task { await activity.update(ActivityContent(state: content, staleDate: nil)) }
+    }
+
+    /// 切换“常驻灵动岛”开关。
+    public func setKeepOnIsland(_ on: Bool) {
+        keepOnIsland = on
+        if on {
+            ensureLiveActivity()
+        } else {
+            endLiveActivity()
+        }
+    }
+
+    /// 续期：iOS 无推送的 Live Activity 默认 8 小时自动结束。
+    /// App 在前台时每 15 分钟检查一次，若已被系统结束则重启，保持“一直在岛上”。
+    private func startKeepAlive() {
+        keepAliveTask?.cancel()
+        keepAliveTask = Task { @MainActor in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(15 * 60))
+                if Task.isCancelled { break }
+                if keepOnIsland, Activity<PetActivityAttributes>.activities.isEmpty {
+                    ensureLiveActivity()
+                }
+            }
+        }
     }
 
     public func endLiveActivity() {

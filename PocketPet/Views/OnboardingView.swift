@@ -109,6 +109,8 @@ struct OnboardingView: View {
                         store.profile.renameCurrent(petName)
                     }
                     store.profile.markOnboarded()
+                    // 引导完成后让小猫立刻登上灵动岛并常驻。
+                    store.ensureLiveActivity()
                     isPresented = false
                 }.buttonStyle(.borderedProminent)
             }

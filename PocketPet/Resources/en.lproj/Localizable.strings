@@ -113,3 +113,5 @@
 "settings.reset.confirm.body" = "This erases all company records, awards and unlocked pets, and cannot be undone. Continue?";
 "settings.reset.confirm.confirm" = "Reset";
 "settings.reset.confirm.cancel" = "Cancel";
+"settings.keepIsland" = "Keep on Dynamic Island";
+"settings.keepIsland.hint" = "Your cat stays on the Dynamic Island. iOS limits how long a single Live Activity can run; the app refreshes it while open. If it disappears, just reopen the app.";

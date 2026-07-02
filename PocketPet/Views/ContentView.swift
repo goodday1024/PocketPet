@@ -31,7 +31,12 @@ struct ContentView: View {
         .task { await pollUnlocked() }
         .task { await pollPetUnlocks() }
         .onAppear {
-            if !store.profile.hasOnboarded { showOnboarding = true }
+            if !store.profile.hasOnboarded {
+                showOnboarding = true
+            } else {
+                // 已引导过的用户每次进入都让小猫回到灵动岛。
+                store.ensureLiveActivity()
+            }
         }
         .fullScreenCover(isPresented: $showOnboarding) {
             OnboardingView(isPresented: $showOnboarding)
