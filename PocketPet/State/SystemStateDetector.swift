@@ -41,8 +41,6 @@ public final class SystemStateDetector: ObservableObject {
     public var onEvent: ((DetectedSystemEvent) -> Void)?
 
     private let autoDetectionKey = "PocketPet.autoDetect.v1"
-    private var musicPlayer: MPMusicPlayerController?
-    private var brightnessObserver: NSKeyValueObservation?
     private var pollTask: Task<Void, Never>?
 
     public init() {
@@ -93,8 +91,6 @@ public final class SystemStateDetector: ObservableObject {
         let title = info[MPMediaItemPropertyTitle] as? String
         let artist = info[MPMediaItemPropertyArtist] as? String
         // playbackRate > 0 视为播放中（0 或缺失视为暂停）
-        let rate = (info[MPNowPlayingInfoPropertyElapsedPlaybackTime] as? Double) != nil
-        // 更稳的判断：有曲目信息且 playbackRate>0
         let playbackRate = info[MPNowPlayingInfoPropertyPlaybackRate] as? Double ?? 0
 
         let playing: Bool
@@ -119,22 +115,22 @@ public final class SystemStateDetector: ObservableObject {
     // MARK: - 屏幕状态检测
 
     private func startScreenDetection() {
-        // 监听亮度变化：系统自动调暗 / 用户手动调暗到很低 → 视为息屏打盹的前兆。
-        brightnessObserver = UIScreen.main.observe(\.brightness, options: [.new]) { [weak self] _, change in
-            Task { @MainActor in
-                self?.handleBrightness(change.newValue ?? 0)
-            }
-        }
-        // 监听保护模式（长时间无触摸，系统进入待机前的变暗）
+        // 监听系统亮度变化通知（用户调亮/调暗、系统自动调暗均会触发）。
+        // 不使用 KVO observe(_:options:)，避免在闭包中捕获 self 的并发告警。
         NotificationCenter.default.addObserver(
-            self, selector: #selector(screenStateChanged),
+            self, selector: #selector(screenBrightnessChanged),
             name: UIScreen.brightnessDidChangeNotification, object: nil)
+        // 用初始亮度初始化一次状态
+        handleBrightness(UIScreen.main.brightness)
     }
 
     private func stopScreenDetection() {
-        brightnessObserver?.invalidate()
-        brightnessObserver = nil
         NotificationCenter.default.removeObserver(self, name: UIScreen.brightnessDidChangeNotification, object: nil)
+    }
+
+    @objc private func screenBrightnessChanged() {
+        // UIScreen.brightnessDidChangeNotification 在主线程派发，直接处理即可。
+        handleBrightness(UIScreen.main.brightness)
     }
 
     private func handleBrightness(_ brightness: CGFloat) {
@@ -146,9 +142,5 @@ public final class SystemStateDetector: ObservableObject {
         } else if !dimmed && wasDimmed {
             onEvent?(.screenAwake)
         }
-    }
-
-    @objc private func screenStateChanged() {
-        handleBrightness(UIScreen.main.brightness)
     }
 }
