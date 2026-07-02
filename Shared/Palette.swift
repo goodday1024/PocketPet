@@ -30,6 +30,13 @@ public enum PetPalette {
         "o": Color(red: 0.10, green: 0.10, blue: 0.12),
         "W": Color(red: 0.55, green: 0.55, blue: 0.58),
     ]) { _, new in new }
+
+    /// 白猫（雪团子）：白色主毛 + 浅粉内耳。
+    public static let whiteCat: [Character: Color] = orangeTabby.merging([
+        "O": Color(red: 0.96, green: 0.96, blue: 0.97),
+        "o": Color(red: 0.82, green: 0.82, blue: 0.85),
+        "W": Color(red: 1.00, green: 1.00, blue: 1.00),
+    ]) { _, new in new }
 }
 
 /// 从十六进制字符串构造颜色，供 App 与灵动岛扩展共用。

@@ -27,11 +27,11 @@ struct HomeView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Image(systemName: store.liveActivityActive ? "circle.fill" : "circle")
-                .foregroundStyle(store.liveActivityActive ? .green : .secondary)
-                .overlay(
-                    Text("灵动岛").font(.system(size: 9)).offset(y: 18)
-                )
+            VStack(spacing: 2) {
+                Image(systemName: store.liveActivityActive ? "circle.fill" : "circle")
+                    .foregroundStyle(store.liveActivityActive ? .green : .secondary)
+                Text("灵动岛").font(.system(size: 9)).foregroundStyle(.secondary)
+            }
         }
         .padding(.horizontal, 4)
     }
@@ -41,25 +41,31 @@ struct HomeView: View {
             PixelPetSceneView(state: store.currentState,
                               species: store.pet.species.speciesCode,
                               pixelSize: 12)
+                .transition(.scale(scale: 0.9).combined(with: .opacity))
+                .id(store.currentState)
             Text(store.scenarioTitle.isEmpty ? store.currentState.defaultTitle : store.scenarioTitle)
                 .font(.headline)
+                .contentTransition(.opacity)
+                .animation(.easeInOut(duration: 0.25), value: store.scenarioTitle)
             if !store.scenarioSubtitle.isEmpty {
                 Text(store.scenarioSubtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .contentTransition(.opacity)
             }
         }
         .frame(maxWidth: .infinity)
         .padding()
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+        .animation(.spring(duration: 0.4), value: store.currentState)
     }
 
     private var quickStats: some View {
         HStack(spacing: 12) {
-            StatChip(icon: "🎧", value: formatTime(store.achievements.metrics.listeningSeconds), label: "听歌")
-            StatChip(icon: "🎮", value: formatTime(store.achievements.metrics.gamingSeconds), label: "娱乐")
-            StatChip(icon: "🗺", value: "\(store.achievements.metrics.navigationCount)", label: "导航")
-            StatChip(icon: "⏱", value: formatTime(store.achievements.metrics.workingSeconds), label: "工作")
+            StatChip(icon: "🎧", value: formatTime(store.achievements.metrics.listeningSeconds), label: "home.listening")
+            StatChip(icon: "🎮", value: formatTime(store.achievements.metrics.gamingSeconds), label: "home.playing")
+            StatChip(icon: "🗺", value: "\(store.achievements.metrics.navigationCount)", label: "home.nav")
+            StatChip(icon: "⏱", value: formatTime(store.achievements.metrics.workingSeconds), label: "home.work")
         }
         .padding(.top, 4)
     }
@@ -80,7 +86,7 @@ struct HomeView: View {
 struct StatChip: View {
     let icon: String
     let value: String
-    let label: String
+    let label: LocalizedStringKey
     var body: some View {
         VStack(spacing: 4) {
             Text(icon).font(.title3)

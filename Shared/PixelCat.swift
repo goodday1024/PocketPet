@@ -254,10 +254,11 @@ public enum PixelCat {
 
     // MARK: - 调色板桥接
 
-    /// 当前宠物的调色板（后续可按 species 切换）。
+    /// 当前宠物的调色板（按 species 切换）。
     public static func palette(for species: String) -> [Character: Color] {
         switch species {
         case "blackCat": return PetPalette.blackCat
+        case "whiteCat": return PetPalette.whiteCat
         default:         return PetPalette.orangeTabby
         }
     }

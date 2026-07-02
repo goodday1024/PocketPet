@@ -12,6 +12,14 @@ public struct PetMetrics: Codable, Hashable {
     public var lateNightSeconds: Double = 0
     public var earlyBirdSeconds: Double = 0
     public var collectedStates: Set<String> = []   // PetState rawValues
+    /// 每日按状态累计的秒数，key 为 "yyyy-MM-dd"。
+    public var dailyHistory: [String: [String: Double]] = [:]
+    /// 连续陪伴天数（最近一次活跃日往前数）。
+    public var currentStreak: Int = 0
+    /// 历史最长连续天数。
+    public var longestStreak: Int = 0
+    /// 最近一次活跃日期 "yyyy-MM-dd"。
+    public var lastActiveDay: String?
 
     public var statesCollectedCount: Int { collectedStates.count }
 
@@ -26,6 +34,7 @@ public struct PetMetrics: Codable, Hashable {
         case .loyaltySeconds:         return loyaltySeconds
         case .lateNightSeconds:       return lateNightSeconds
         case .earlyBirdSeconds:       return earlyBirdSeconds
+        case .streakDays:             return Double(currentStreak)
         }
     }
 }
@@ -63,9 +72,65 @@ public final class AchievementStore: ObservableObject {
         case .navigating: break // 导航按次数计
         case .sleeping, .idle: break
         }
+        recordDaily(state: state, seconds: seconds, date: date)
+        bumpStreak(date: date)
         collect(state: state)
         persist()
         recompute()
+    }
+
+    /// 记录每日每状态秒数（用于统计详情页柱状图）。
+    private func recordDaily(state: PetState, seconds: Double, date: Date) {
+        let key = Self.dayKey(date)
+        var day = metrics.dailyHistory[key] ?? [:]
+        day[state.rawValue, default: 0] += seconds
+        metrics.dailyHistory[key] = day
+        // 仅保留最近 30 天，避免无限增长。
+        if metrics.dailyHistory.count > 30 {
+            let cutoff = Self.dayKey(Calendar.current.date(byAdding: .day, value: -30, to: date) ?? date)
+            metrics.dailyHistory = metrics.dailyHistory.filter { $0.key >= cutoff }
+        }
+    }
+
+    /// 更新连续打卡。
+    private func bumpStreak(date: Date) {
+        let today = Self.dayKey(date)
+        guard metrics.lastActiveDay != today else { return } // 当天已计
+        let yesterday = Self.dayKey(Calendar.current.date(byAdding: .day, value: -1, to: date) ?? date)
+        if metrics.lastActiveDay == yesterday {
+            metrics.currentStreak += 1
+        } else if metrics.lastActiveDay == nil {
+            metrics.currentStreak = 1
+        } else {
+            metrics.currentStreak = 1 // 断了，重新计
+        }
+        metrics.lastActiveDay = today
+        metrics.longestStreak = max(metrics.longestStreak, metrics.currentStreak)
+    }
+
+    /// 取最近 N 天的每日汇总（用于图表）。
+    public func recentDays(_ n: Int) -> [(day: String, total: Double, byState: [PetState: Double])] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        var out: [(String, Double, [PetState: Double])] = []
+        for i in stride(from: n - 1, through: 0, by: -1) {
+            let d = cal.date(byAdding: .day, value: -i, to: today) ?? today
+            let key = Self.dayKey(d)
+            let day = metrics.dailyHistory[key] ?? [:]
+            var byState: [PetState: Double] = [:]
+            var total: Double = 0
+            for (s, v) in day {
+                if let ps = PetState(rawValue: s) { byState[ps] = v; total += v }
+            }
+            out.append((key, total, byState))
+        }
+        return out
+    }
+
+    private static func dayKey(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: date)
     }
 
     /// 累加次数（导航 / 消息）。
@@ -112,6 +177,15 @@ public final class AchievementStore: ObservableObject {
     public func popNewlyUnlocked() -> Achievement? {
         guard !newlyUnlocked.isEmpty else { return nil }
         return newlyUnlocked.removeFirst()
+    }
+
+    /// 清空全部统计与解锁记录（设置页重置时调用）。
+    public func reset() {
+        metrics = PetMetrics()
+        unlockedIDs = []
+        newlyUnlocked = []
+        defaults.removeObject(forKey: metricsKey)
+        defaults.removeObject(forKey: unlockedKey)
     }
 
     // MARK: - 持久化

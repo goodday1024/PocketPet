@@ -28,6 +28,7 @@ public struct Achievement: Codable, Hashable, Identifiable {
         case loyaltySeconds
         case lateNightSeconds   // 夜猫子：0-5 点使用时长
         case earlyBirdSeconds   // 早起鸟：5-8 点使用时长
+        case streakDays         // 连续陪伴天数
     }
 }
 
@@ -65,5 +66,9 @@ public enum AchievementCatalog {
         // 彩蛋
         .init(id: "late_b", title: "夜猫子", detail: "0-5 点陪伴 30 分钟", category: .loyalty, tier: .bronze, metricKey: .lateNightSeconds, threshold: 1800, icon: "🌙"),
         .init(id: "early_b", title: "早起鸟", detail: "5-8 点陪伴 30 分钟", category: .loyalty, tier: .bronze, metricKey: .earlyBirdSeconds, threshold: 1800, icon: "🌅"),
+        // 连续陪伴
+        .init(id: "streak_b", title: "坚持陪伴", detail: "连续陪伴 3 天", category: .loyalty, tier: .bronze, metricKey: .streakDays, threshold: 3, icon: "🔥"),
+        .init(id: "streak_s", title: "一周之约", detail: "连续陪伴 7 天", category: .loyalty, tier: .silver, metricKey: .streakDays, threshold: 7, icon: "📅"),
+        .init(id: "streak_g", title: "月度之伴", detail: "连续陪伴 30 天", category: .loyalty, tier: .gold, metricKey: .streakDays, threshold: 30, icon: "🌟"),
     ]
 }

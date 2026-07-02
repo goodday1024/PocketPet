@@ -12,16 +12,16 @@ struct ScenarioLauncherView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("场景触发").font(.headline)
+            Text("home.scenario").font(.headline)
 
             // 听歌
             scenarioCard(.music) {
                 HStack {
-                    TextField("歌曲名", text: $songName)
+                    TextField("home.music", text: $songName)
                         .textFieldStyle(.roundedBorder)
-                    Button("开始摇摆") {
-                        store.enter(.music, title: "正在听: \(songName)",
-                                    subtitle: "跟随节奏摇摆")
+                    Button("home.startSwing") {
+                        store.enter(.music, title: String(format: NSLocalizedString("fmt.listening", value: "正在听: %@", comment: ""), songName),
+                                    subtitle: NSLocalizedString("music.swing", value: "跟随节奏摇摆", comment: ""))
                     }.buttonStyle(.borderedProminent)
                 }
             }
@@ -30,18 +30,19 @@ struct ScenarioLauncherView: View {
             scenarioCard(.working) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text("时长").font(.caption)
+                        Text("home.duration").font(.caption)
                         Slider(value: $timerMinutes, in: 5...120, step: 5)
-                        Text("\(Int(timerMinutes)) 分").font(.caption).monospacedDigit()
+                        Text("\(Int(timerMinutes)) m").font(.caption).monospacedDigit()
                     }
                     HStack {
-                        Button("开始专注") { startTimer() }.buttonStyle(.borderedProminent)
+                        Button("home.startFocus") { startTimer() }.buttonStyle(.borderedProminent)
                         if remainingSeconds > 0 {
-                            Text("剩余 \(formatCountdown(remainingSeconds))")
+                            Text(String(format: NSLocalizedString("home.remaining", value: "剩余 %@", comment: ""),
+                                        formatCountdown(remainingSeconds)))
                                 .font(.callout).monospacedDigit()
                         }
                         Spacer()
-                        Button("结束") { endTimer() }.buttonStyle(.bordered)
+                        Button(NSLocalizedString("common.end", value: "结束", comment: "")) { endTimer() }.buttonStyle(.bordered)
                     }
                 }
             }
@@ -49,11 +50,12 @@ struct ScenarioLauncherView: View {
             // 导航
             scenarioCard(.navigating) {
                 HStack {
-                    TextField("目的地", text: $destName)
+                    TextField("home.destination", text: $destName)
                         .textFieldStyle(.roundedBorder)
-                    Button("出发") {
-                        store.enter(.navigating, title: "前往: \(destName)",
-                                    subtitle: "拿着地图找路中…")
+                    Button("home.go") {
+                        store.enter(.navigating,
+                                    title: String(format: NSLocalizedString("fmt.heading", value: "前往: %@", comment: ""), destName),
+                                    subtitle: NSLocalizedString("nav.hint", value: "拿着地图找路中…", comment: ""))
                     }.buttonStyle(.borderedProminent)
                 }
             }
@@ -61,13 +63,14 @@ struct ScenarioLauncherView: View {
             // 娱乐（游戏 / 发消息）
             scenarioCard(.playing) {
                 HStack {
-                    Button("开始娱乐") {
-                        store.enter(.playing, title: "娱乐时光",
-                                    subtitle: "打游戏 / 聊天中")
+                    Button("home.startPlay") {
+                        store.enter(.playing, title: NSLocalizedString("title.play", value: "娱乐时光", comment: ""),
+                                    subtitle: NSLocalizedString("play.hint", value: "打游戏 / 聊天中", comment: ""))
                     }.buttonStyle(.borderedProminent)
-                    Button("发条消息") {
+                    Button("home.sendMsg") {
                         if store.currentState != .playing {
-                            store.enter(.playing, title: "娱乐时光", subtitle: "聊天中")
+                            store.enter(.playing, title: NSLocalizedString("title.play", value: "娱乐时光", comment: ""),
+                                        subtitle: NSLocalizedString("play.hint", value: "打游戏 / 聊天中", comment: ""))
                         }
                         store.sendMessage()
                     }.buttonStyle(.bordered)
@@ -78,7 +81,7 @@ struct ScenarioLauncherView: View {
                 endTimer()
                 store.endScenario()
             } label: {
-                Label("结束所有场景，回待机", systemImage: "stop.circle")
+                Label("home.endAll", systemImage: "stop.circle")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
@@ -92,9 +95,9 @@ struct ScenarioLauncherView: View {
                 Text(state.displayName).font(.subheadline).bold()
                 Spacer()
                 if store.currentState == state {
-                    Text("进行中").font(.caption2)
+                    Text("home.inProgress").font(.caption2)
                         .padding(.horizontal, 8).padding(.vertical, 3)
-                        .background(state.accentColor.opacity(0.2), in: Capsule())
+                        .background((Color(hex: state.accentHex) ?? .orange).opacity(0.2), in: Capsule())
                 }
             }
             content()
@@ -108,15 +111,19 @@ struct ScenarioLauncherView: View {
     private func startTimer() {
         countdown?.invalidate()
         remainingSeconds = Int(timerMinutes * 60)
-        store.enter(.working, title: "专注 \(Int(timerMinutes)) 分钟",
-                    subtitle: "剩余 \(formatCountdown(remainingSeconds))")
+        store.enter(.working,
+                    title: String(format: NSLocalizedString("fmt.focus", value: "专注 %d 分钟", comment: ""), Int(timerMinutes)),
+                    subtitle: String(format: NSLocalizedString("home.remaining", value: "剩余 %@", comment: ""),
+                                     formatCountdown(remainingSeconds)))
         countdown = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             Task { @MainActor in
                 remainingSeconds -= 1
                 if remainingSeconds <= 0 {
                     endTimer()
+                    Haptics.success()
                 } else {
-                    store.scenarioSubtitle = "剩余 \(formatCountdown(remainingSeconds))"
+                    store.scenarioSubtitle = String(format: NSLocalizedString("home.remaining", value: "剩余 %@", comment: ""),
+                                                    formatCountdown(remainingSeconds))
                 }
             }
         }

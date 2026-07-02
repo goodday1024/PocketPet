@@ -1,0 +1,35 @@
+PocketPet — a pixel pet in your pocket
+
+A tiny cat living in your phone that rides the Dynamic Island, changes mood with your activities, and records your companionship through awards.
+
+【A pet on the Dynamic Island】
+After launching the app, your cat appears on the iPhone Dynamic Island and Lock Screen. It switches animations based on what you're doing:
+· While music plays, it sways to the beat with floating notes
+· When you start a focus timer, it stares attentively with a ticking clock
+· During navigation, it holds a map and looks around for the way
+· When messaging or gaming, it bounces excitedly and pulls out a tiny controller
+· Left idle, it dozes off with rising Zzz
+· By default, it sits and blinks at you
+
+【Living pixel art】
+Every pet is pixel-styled, and each frame is drawn in real time by code — never a static image. Each scenario has its own animation and accessories, full of life.
+
+【A rich award system】
+The longer you keep it company, the more you unlock:
+· Music lover — 10 min / 1 hr / 10 hr of listening
+· Gamer — 10 min / 2 hr / 10 hr of play
+· Navigator — 1 / 10 / 100 trips
+· Workaholic — 25 min / 2 hr / 10 hr of focus
+· Social butterfly — 1 / 50 / 500 messages
+· State collector — 3 / 5 / 6 moods discovered
+· Loyal companion — 1 hr / 24 hr / 7 days of company
+· Streaks — 3 / 7 / 30 consecutive days
+· Night owl / Early bird — time-of-day surprises
+
+【Unlock more pets】
+Start with the Orange Tabby. Unlock the Black Cat after 1 hour of company, and the White Cat after earning 3 awards. More pets are coming soon.
+
+【Privacy first】
+PocketPet collects, uploads, and shares nothing. All records, awards, and stats live only on your device and are erased on uninstall. Dynamic Island content is rendered locally with no network requests.
+
+Adopt your pocket pet today.

@@ -18,6 +18,11 @@
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleDevelopmentRegion</key>
     <string>zh_CN</string>
+    <key>CFBundleLocalizations</key>
+    <array>
+        <string>zh-Hans</string>
+        <string>en</string>
+    </array>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>UILaunchScreen</key>

@@ -2,20 +2,26 @@ import Foundation
 import SwiftUI
 import ActivityKit
 import Combine
+import UIKit
 
-/// 宠物与状态总管：维护当前宠物、当前场景状态、灵动岛 Live Activity，
-/// 并把各状态持续时间 / 次数上报给 `AchievementStore`。
+/// 宠物与状态总管：维护当前场景状态、灵动岛 Live Activity，
+/// 并把各状态持续时间 / 次数上报给 `AchievementStore`，
+/// 同时与 `ProfileStore` 联动实现宠物切换 / 解锁。
 @MainActor
 public final class PetStore: ObservableObject {
 
-    @Published public var pet: Pet
+    public let profile: ProfileStore
+    public let achievements: AchievementStore
+
     @Published public var currentState: PetState = .idle
     @Published public var liveActivityActive: Bool = false
-    /// 当前场景的展示文案（歌曲名 / 目的地 / 游戏名 …）。
     @Published public var scenarioTitle: String = ""
     @Published public var scenarioSubtitle: String = ""
+    /// 新解锁的宠物（待提示）。
+    @Published public var newlyUnlockedPets: [PetSpecies] = []
 
-    public let achievements = AchievementStore()
+    /// 当前宠物（绑定到 profile）。
+    public var pet: Pet { profile.currentPet }
 
     /// 空闲多久（无任何场景）后进入打盹。
     private let idleToSleep: TimeInterval = 30
@@ -23,9 +29,12 @@ public final class PetStore: ObservableObject {
     private var stateStartedAt: Date = .init()
     private var tickerTask: Task<Void, Never>?
 
-    public init(pet: Pet = Pet(name: "咪咪", species: .orangeCat)) {
-        self.pet = pet
+    public init(profile: ProfileStore = ProfileStore(),
+                achievements: AchievementStore = AchievementStore()) {
+        self.profile = profile
+        self.achievements = achievements
         self.stateStartedAt = Date()
+        self.scenarioTitle = PetState.idle.defaultTitle
         startTicker()
         resetIdleTimer()
     }
@@ -43,6 +52,7 @@ public final class PetStore: ObservableObject {
         scenarioTitle = title.isEmpty ? state.defaultTitle : title
         scenarioSubtitle = subtitle
         achievements.collect(state: state)
+        Haptics.tap(state: state)
 
         // 计次类（导航 / 消息）立即 +1
         if state == .navigating { achievements.incrementCount(for: .navigation) }
@@ -51,6 +61,7 @@ public final class PetStore: ObservableObject {
             startLiveActivity(for: state)
         }
         resetIdleTimer()
+        checkPetUnlocks()
     }
 
     /// 结束当前场景，回到待机；若一段时间无操作则进入打盹。
@@ -61,12 +72,25 @@ public final class PetStore: ObservableObject {
         stateStartedAt = Date()
         scenarioTitle = PetState.idle.defaultTitle
         scenarioSubtitle = ""
+        Haptics.light()
         resetIdleTimer()
+        checkPetUnlocks()
     }
 
     /// 发送一条消息（娱乐状态下的子动作）。
     public func sendMessage() {
         achievements.incrementCount(for: .messaging)
+        Haptics.light()
+        checkPetUnlocks()
+    }
+
+    /// 切换当前宠物，并同步更新灵动岛展示。
+    public func switchPet(to id: UUID) {
+        profile.switchTo(id)
+        Haptics.success()
+        if liveActivityActive {
+            updateLiveActivity(to: currentState, title: scenarioTitle, subtitle: scenarioSubtitle)
+        }
     }
 
     // MARK: - 空闲 -> 打盹
@@ -87,7 +111,7 @@ public final class PetStore: ObservableObject {
         currentState = .sleeping
         stateStartedAt = Date()
         scenarioTitle = PetState.sleeping.defaultTitle
-        scenarioSubtitle = "嘘，它在打盹…"
+        scenarioSubtitle = NSLocalizedString("sleep.hint", value: "嘘，它在打盹…", comment: "")
         updateLiveActivity(to: .sleeping, title: scenarioTitle, subtitle: scenarioSubtitle)
     }
 
@@ -109,11 +133,21 @@ public final class PetStore: ObservableObject {
         guard dur > 0 else { return }
         achievements.addDuration(dur, for: currentState, at: now)
         stateStartedAt = now
-        // 解锁黑煤球：陪伴满 1 小时
-        if pet.species == .orangeCat,
-           achievements.metrics.loyaltySeconds >= 3600 {
-            // 标记可解锁（UI 层提示），这里不自动切换宠物
+    }
+
+    // MARK: - 宠物解锁
+
+    private func checkPetUnlocks() {
+        let newly = profile.checkUnlocks(loyaltySeconds: achievements.metrics.loyaltySeconds,
+                                         unlockedAchievementCount: achievements.unlockedIDs.count)
+        if !newly.isEmpty {
+            newlyUnlockedPets.append(contentsOf: newly)
         }
+    }
+
+    public func popNewlyUnlockedPet() -> PetSpecies? {
+        guard !newlyUnlockedPets.isEmpty else { return nil }
+        return newlyUnlockedPets.removeFirst()
     }
 
     // MARK: - Live Activity
@@ -169,12 +203,41 @@ public extension PetState {
     /// 默认场景文案。
     var defaultTitle: String {
         switch self {
-        case .sleeping:   return "打盹中…"
-        case .idle:       return "陪你待机"
-        case .music:      return "正在听歌"
-        case .working:    return "专注工作中"
-        case .navigating: return "正在导航"
-        case .playing:    return "娱乐时光"
+        case .sleeping:   return NSLocalizedString("title.sleep", value: "打盹中…", comment: "")
+        case .idle:       return NSLocalizedString("title.idle", value: "陪你待机", comment: "")
+        case .music:      return NSLocalizedString("title.music", value: "正在听歌", comment: "")
+        case .working:    return NSLocalizedString("title.work", value: "专注工作中", comment: "")
+        case .navigating: return NSLocalizedString("title.nav", value: "正在导航", comment: "")
+        case .playing:    return NSLocalizedString("title.play", value: "娱乐时光", comment: "")
         }
+    }
+}
+
+/// 触感反馈封装。不同状态用不同强度，提升交互质感。
+public enum Haptics {
+    public static func tap(state: PetState) {
+        switch state {
+        case .music:      impact(.rigid, 0.4)
+        case .playing:    impact(.medium, 0.6)
+        case .working:    impact(.soft, 0.5)
+        case .navigating: impact(.light, 0.4)
+        case .sleeping:   impact(.soft, 0.3)
+        case .idle:       break
+        }
+    }
+    public static func light() { impact(.light, 0.3) }
+    public static func success() {
+        guard defaultsAreEnabled else { return }
+        let g = UINotificationFeedbackGenerator()
+        g.notificationOccurred(.success)
+    }
+    private static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle, _ intensity: CGFloat) {
+        guard defaultsAreEnabled else { return }
+        let g = UIImpactFeedbackGenerator(style: style)
+        g.prepare()
+        g.impactOccurred(intensity: intensity)
+    }
+    private static var defaultsAreEnabled: Bool {
+        UserDefaults.standard.object(forKey: "PocketPet.hapticsEnabled") as? Bool ?? true
     }
 }

@@ -75,4 +75,19 @@ open PocketPet.xcodeproj
 真机安装需自签名或通过 AltStore / Sideloadly 侧载；如需签名版，在仓库 Secrets 配置
 `BUILD_CERTIFICATE_P12` / `P12_PASSWORD` / `BUILD_PROVISION_PROFILE` 后改造工作流。
 
-> 灵动岛仅在 iPhone 14 Pro 及以上机型显示；锁屏 Live Activity 在所有支持 iOS 16.1+ 的机型可用。
+## 发布到 App Store
+
+本项目已具备上架条件：
+
+- **App 图标**：`scripts/gen_app_icon.py` 生成像素橘猫图标（1024 + 各尺寸），已就位。
+- **本地化**：`PocketPet/Resources/` 下 `zh-Hans` / `en` 两套 `Localizable.strings`。
+- **隐私政策**：`PRIVACY.md` + App 内“设置 → 隐私政策”页；App Store 元数据见 `fastlane/metadata/`。
+- **首次启动引导**、**设置页**、**宠物切换/解锁**、**统计详情**、**触感反馈**均已实现。
+
+上架步骤：
+1. 用 Apple Developer 账号在 Xcode 配置签名（Team + Bundle ID `com.goodday1024.PocketPet`）。
+2. Archive 后 Distribute App → App Store Connect。
+3. 在 App Store Connect 填写截图、审核信息（可参考 `fastlane/metadata/` 中的描述与关键词）。
+4. 提交审核。审核要点：Live Activity 为本地展示无后台行为，隐私问卷全部选“否”。
+
+> 灵动岛仅在 iPhone 14 Pro 及以上机型显示；锁屏 Live Activity 在所有支持 iOS 16.2+ 的机型可用。

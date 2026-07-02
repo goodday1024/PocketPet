@@ -1,0 +1,125 @@
+/* PocketPet — 简体中文 */
+
+// 通用
+"tab.home" = "萌宠";
+"tab.achievements" = "成就";
+"tab.stats" = "统计";
+"tab.settings" = "设置";
+
+// 宠物
+"default.pet.name" = "咪咪";
+"default.pet.black" = "小黑";
+"default.pet.white" = "雪球";
+"pet.orange" = "橘小咪";
+"pet.black" = "黑煤球";
+"pet.white" = "雪团子";
+"pet.orange.unlock" = "默认伙伴，陪伴你度过每一段时光。";
+"pet.black.unlock" = "累计陪伴 1 小时后解锁。";
+"pet.white.unlock" = "解锁 3 项成就后解锁。";
+
+// 状态文案
+"title.sleep" = "打盹中…";
+"title.idle" = "陪你待机";
+"title.music" = "正在听歌";
+"title.work" = "专注工作中";
+"title.nav" = "正在导航";
+"title.play" = "娱乐时光";
+"sleep.hint" = "嘘，它在打盹…";
+
+// 引导
+"onboard.intro.subtitle" = "一只住在你手机里的小猫，会登上灵动岛，陪你度过每一段时光。";
+"onboard.states.title" = "六种状态，随你而动";
+"onboard.states.hint" = "听歌摇摆、专注工作、看图找路… 它会随你的状态切换动画。";
+"onboard.ach.title" = "解锁成就";
+"onboard.ach.hint" = "陪伴越久，成就越多，还能解锁更多萌宠。";
+"onboard.name.title" = "给它起个名字";
+"onboard.name.placeholder" = "给你的小猫起个名字";
+"onboard.prev" = "上一步";
+"onboard.next" = "下一步";
+"onboard.start" = "开始陪伴";
+
+// 设置
+"settings.pet" = "我的宠物";
+"settings.switch" = "切换";
+"settings.rename" = "重命名宠物";
+"settings.experience" = "体验";
+"settings.haptics" = "触感反馈";
+"settings.streak" = "连续陪伴";
+"settings.days" = "天";
+"settings.loyalty" = "累计陪伴";
+"settings.about" = "关于";
+"settings.privacy" = "隐私政策";
+"settings.aboutApp" = "关于 PocketPet";
+"settings.github" = "GitHub 项目";
+"settings.reset" = "重置全部数据";
+"settings.using" = "使用中";
+"settings.use" = "使用";
+
+// 统计
+"stats.title" = "统计";
+"stats.currentStreak" = "当前连续";
+"stats.longestStreak" = "最长连续";
+"stats.states" = "已收集状态";
+"stats.week" = "最近 7 天";
+"stats.distribution" = "时长分布";
+"stats.navCount" = "导航次数";
+"stats.msgCount" = "消息次数";
+
+// 弹窗
+"toast.ach.unlocked" = "🏆 解锁成就";
+"toast.pet.unlocked" = "🎉 解锁新宠物";
+
+// 隐私
+"privacy.title" = "隐私政策";
+"privacy.updated" = "最后更新：2026 年 7 月";
+"privacy.collect.title" = "我们收集什么";
+"privacy.collect.body" = "PocketPet 不收集、不上传、不分享任何个人信息。所有陪伴时长、成就与统计仅保存在你的设备本地。";
+"privacy.storage.title" = "数据存储";
+"privacy.storage.body" = "所有数据使用 iOS 系统的 UserDefaults 存储于本机。卸载 App 后数据将被清除，不会同步到云端或其它设备。";
+"privacy.activity.title" = "灵动岛与实时活动";
+"privacy.activity.body" = "我们使用 iOS Live Activities 在灵动岛和锁屏展示宠物状态。这些展示完全在你设备本地完成，不涉及任何网络请求或数据传输。";
+"privacy.third.title" = "第三方服务";
+"privacy.third.body" = "PocketPet 不集成任何第三方分析、广告或追踪 SDK，也不使用 Apple 追踪透明度框架追踪用户。";
+"privacy.children.title" = "儿童";
+"privacy.children.body" = "PocketPet 适合所有年龄段使用，不包含任何不适合儿童的内容，也不向儿童收集信息。";
+"privacy.contact.title" = "联系我们";
+"privacy.contact.body" = "如有任何隐私相关的问题，可通过 GitHub 项目页提交 Issue 与我们联系。";
+
+// 关于
+"about.desc" = "PocketPet 是一只住在手机里的像素小猫，会登上灵动岛，跟随你的生活节奏变换状态，并通过成就系统记录陪伴时光。";
+"about.credits" = "致谢";
+"about.credits.body" = "使用 SwiftUI、ActivityKit 与 WidgetKit 构建。像素艺术由代码生成。感谢每一位陪伴小猫的用户。";
+
+// 首页
+"home.scenario" = "场景触发";
+"home.endAll" = "结束所有场景，回待机";
+"home.music" = "歌曲名";
+"home.startSwing" = "开始摇摆";
+"home.duration" = "时长";
+"home.startFocus" = "开始专注";
+"home.remaining" = "剩余 %@";
+"home.destination" = "目的地";
+"home.go" = "出发";
+"home.startPlay" = "开始娱乐";
+"home.sendMsg" = "发条消息";
+"home.inProgress" = "进行中";
+"home.listening" = "听歌";
+"home.playing" = "娱乐";
+"home.nav" = "导航";
+"home.work" = "工作";
+
+"common.end" = "结束";
+"fmt.listening" = "正在听: %@";
+"fmt.heading" = "前往: %@";
+"fmt.focus" = "专注 %d 分钟";
+"music.swing" = "跟随节奏摇摆";
+"nav.hint" = "拿着地图找路中…";
+"play.hint" = "打游戏 / 聊天中";
+
+"settings.rename.title" = "重命名宠物";
+"settings.rename.save" = "保存";
+"settings.rename.cancel" = "取消";
+"settings.reset.confirm.title" = "确认重置";
+"settings.reset.confirm.body" = "这将清除所有陪伴记录、成就与已解锁宠物，且无法恢复。确定继续吗？";
+"settings.reset.confirm.confirm" = "重置";
+"settings.reset.confirm.cancel" = "取消";
