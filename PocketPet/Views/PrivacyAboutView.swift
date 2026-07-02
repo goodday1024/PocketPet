@@ -8,10 +8,10 @@ struct PrivacyView: View {
                 Text("privacy.title").font(.title2).bold()
                 Text("privacy.updated").font(.caption).foregroundStyle(.secondary)
                 Divider()
-                ForEach(privacySections, id: \.0) { section in
+                ForEach(privacySections) { section in
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(section.0).font(.headline)
-                        Text(section.1).font(.body).foregroundStyle(.primary)
+                        Text(section.title).font(.headline)
+                        Text(section.body).font(.body).foregroundStyle(.primary)
                     }
                 }
             }
@@ -20,14 +20,20 @@ struct PrivacyView: View {
         .navigationTitle("settings.privacy")
     }
 
-    private var privacySections: [(LocalizedStringKey, LocalizedStringKey)] {
+    private struct Section: Identifiable {
+        let id = UUID()
+        let title: LocalizedStringKey
+        let body: LocalizedStringKey
+    }
+
+    private var privacySections: [Section] {
         [
-            ("privacy.collect.title", "privacy.collect.body"),
-            ("privacy.storage.title", "privacy.storage.body"),
-            ("privacy.activity.title", "privacy.activity.body"),
-            ("privacy.third.title", "privacy.third.body"),
-            ("privacy.children.title", "privacy.children.body"),
-            ("privacy.contact.title", "privacy.contact.body"),
+            .init(title: "privacy.collect.title", body: "privacy.collect.body"),
+            .init(title: "privacy.storage.title", body: "privacy.storage.body"),
+            .init(title: "privacy.activity.title", body: "privacy.activity.body"),
+            .init(title: "privacy.third.title", body: "privacy.third.body"),
+            .init(title: "privacy.children.title", body: "privacy.children.body"),
+            .init(title: "privacy.contact.title", body: "privacy.contact.body"),
         ]
     }
 }

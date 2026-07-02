@@ -29,8 +29,7 @@ public final class PetStore: ObservableObject {
     private var stateStartedAt: Date = .init()
     private var tickerTask: Task<Void, Never>?
 
-    public init(profile: ProfileStore = ProfileStore(),
-                achievements: AchievementStore = AchievementStore()) {
+    public init(profile: ProfileStore, achievements: AchievementStore) {
         self.profile = profile
         self.achievements = achievements
         self.stateStartedAt = Date()
