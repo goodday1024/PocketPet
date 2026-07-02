@@ -115,3 +115,14 @@
 "settings.reset.confirm.cancel" = "Cancel";
 "settings.keepIsland" = "Keep on Dynamic Island";
 "settings.keepIsland.hint" = "Your cat stays on the Dynamic Island. iOS limits how long a single Live Activity can run; the app refreshes it while open. If it disappears, just reopen the app.";
+"settings.autoDetect" = "Auto-detect system state";
+"settings.autoDetect.hint" = "Detects system playback and screen-off automatically. Navigation / messaging / gaming cannot be auto-detected due to iOS privacy limits and stay manual.";
+
+"auto.badge" = "Auto";
+"manual.badge" = "Manual";
+"auto.music" = "Auto music";
+"auto.screen" = "Screen-off nap";
+"auto.music.detecting" = "Now playing: %@";
+"auto.music.unknown" = "Unknown track";
+"auto.music.idle" = "No playback detected. Play Apple Music or Podcasts and the cat will sway automatically.";
+"auto.music.hint" = "Uses system Now Playing, covering Apple Music / Podcasts and other system players.";

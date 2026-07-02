@@ -125,3 +125,15 @@
 "settings.reset.confirm.cancel" = "取消";
 "settings.keepIsland" = "常驻灵动岛";
 "settings.keepIsland.hint" = "开启后小猫会一直显示在灵动岛上。系统对单次实时活动有时长限制，App 在前台时会自动恢复；如长时间不见，重新打开 App 即可。";
+"settings.autoDetect" = "自动检测系统状态";
+"settings.autoDetect.hint" = "自动检测系统播放与息屏状态，宠物随真实状态切换。导航/发消息/打游戏因 iOS 隐私限制无法自动检测，保留为手动场景。";
+
+// 自动 / 手动标识
+"auto.badge" = "自动";
+"manual.badge" = "手动";
+"auto.music" = "自动听歌";
+"auto.screen" = "息屏打盹";
+"auto.music.detecting" = "检测到播放：%@";
+"auto.music.unknown" = "未知曲目";
+"auto.music.idle" = "当前未检测到播放。播放 Apple Music 或播客后小猫会自动摇摆。";
+"auto.music.hint" = "通过系统 Now Playing 检测，覆盖 Apple Music / 播客等系统播放器。";

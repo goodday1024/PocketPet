@@ -4,7 +4,6 @@ import SwiftUI
 /// 真机使用时，这些场景也可由系统事件（耳机播放 / 导航 App 唤起）自动触发。
 struct ScenarioLauncherView: View {
     @EnvironmentObject var store: PetStore
-    @State private var songName = "Shape of You"
     @State private var destName = "公司"
     @State private var timerMinutes: Double = 25
     @State private var remainingSeconds: Int = 0
@@ -14,20 +13,11 @@ struct ScenarioLauncherView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("home.scenario").font(.headline)
 
-            // 听歌
-            scenarioCard(.music) {
-                HStack {
-                    TextField("home.music", text: $songName)
-                        .textFieldStyle(.roundedBorder)
-                    Button("home.startSwing") {
-                        store.enter(.music, title: String(format: NSLocalizedString("fmt.listening", value: "正在听: %@", comment: ""), songName),
-                                    subtitle: NSLocalizedString("music.swing", value: "跟随节奏摇摆", comment: ""))
-                    }.buttonStyle(.borderedProminent)
-                }
-            }
+            // 听歌：自动检测（说明 + 手动覆盖入口）
+            autoMusicCard
 
-            // 计时器工作
-            scenarioCard(.working) {
+            // 计时器工作（手动）
+            scenarioCard(.working, manual: true) {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("home.duration").font(.caption)
@@ -47,8 +37,8 @@ struct ScenarioLauncherView: View {
                 }
             }
 
-            // 导航
-            scenarioCard(.navigating) {
+            // 导航（手动）
+            scenarioCard(.navigating, manual: true) {
                 HStack {
                     TextField("home.destination", text: $destName)
                         .textFieldStyle(.roundedBorder)
@@ -60,8 +50,8 @@ struct ScenarioLauncherView: View {
                 }
             }
 
-            // 娱乐（游戏 / 发消息）
-            scenarioCard(.playing) {
+            // 娱乐（手动）
+            scenarioCard(.playing, manual: true) {
                 HStack {
                     Button("home.startPlay") {
                         store.enter(.playing, title: NSLocalizedString("title.play", value: "娱乐时光", comment: ""),
@@ -88,11 +78,44 @@ struct ScenarioLauncherView: View {
         }
     }
 
-    private func scenarioCard<S: View>(_ state: PetState, @ViewBuilder content: () -> S) -> some View {
+    /// 听歌：说明由系统自动检测，并提供手动测试入口。
+    private var autoMusicCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(PetState.music.emoji).font(.title3)
+                Text(PetState.music.displayName).font(.subheadline).bold()
+                Spacer()
+                Label("auto.badge", systemImage: "waveform")
+                    .labelStyle(.titleAndIcon)
+                    .font(.caption2)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(Color.yellow.opacity(0.2), in: Capsule())
+            }
+            if store.detector.isPlayingMusic {
+                Text(String(format: NSLocalizedString("auto.music.detecting", value: "检测到播放：%@", comment: ""),
+                            store.detector.nowPlayingTitle ?? NSLocalizedString("auto.music.unknown", value: "未知曲目", comment: "")))
+                    .font(.caption).foregroundStyle(.green)
+            } else {
+                Text("auto.music.idle").font(.caption).foregroundStyle(.secondary)
+            }
+            Text("auto.music.hint").font(.caption2).foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private func scenarioCard<S: View>(_ state: PetState, manual: Bool = false, @ViewBuilder content: () -> S) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text(state.emoji).font(.title3)
                 Text(state.displayName).font(.subheadline).bold()
+                if manual {
+                    Label("manual.badge", systemImage: "hand.tap")
+                        .labelStyle(.titleAndIcon)
+                        .font(.caption2)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Color.gray.opacity(0.15), in: Capsule())
+                }
                 Spacer()
                 if store.currentState == state {
                     Text("home.inProgress").font(.caption2)

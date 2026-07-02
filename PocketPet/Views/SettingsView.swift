@@ -87,6 +87,10 @@ struct SettingsView: View {
 
     private var experienceSection: some View {
         Section {
+            Toggle("settings.autoDetect", isOn: Binding(
+                get: { store.detector.autoDetectionEnabled },
+                set: { store.detector.autoDetectionEnabled = $0 }
+            ))
             Toggle("settings.keepIsland", isOn: Binding(
                 get: { store.keepOnIsland },
                 set: { store.setKeepOnIsland($0) }
@@ -107,7 +111,7 @@ struct SettingsView: View {
         } header: {
             Text("settings.experience")
         } footer: {
-            Text("settings.keepIsland.hint")
+            Text("settings.autoDetect.hint")
                 .font(.caption2)
         }
     }

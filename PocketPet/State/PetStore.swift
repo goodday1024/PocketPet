@@ -24,6 +24,13 @@ public final class PetStore: ObservableObject {
         didSet { UserDefaults.standard.set(keepOnIsland, forKey: keepOnIslandKey) }
     }
 
+    /// 当前状态来源：自动检测优先级高于手动触发。
+    @Published public private(set) var stateSource: StateSource = .manual
+    /// 系统状态自动检测器。
+    public let detector = SystemStateDetector()
+    /// 当前是否有自动检测占据的状态（用于避免手动操作误打断）。
+    private var autoStateActive: Bool = false
+
     /// 当前宠物（绑定到 profile）。
     public var pet: Pet { profile.currentPet }
 
@@ -34,8 +41,15 @@ public final class PetStore: ObservableObject {
     private var stateStartedAt: Date = .init()
     private var tickerTask: Task<Void, Never>?
     /// 续期任务：iOS Live Activity 默认 8 小时（无推送）自动结束，
-    /// App 在前台时定期检查并重启，让小猫“一直保持在灵动岛上”。
+    /// App 在前台时定期检查并重启，让小猫"一直保持在灵动岛上"。
     private var keepAliveTask: Task<Void, Never>?
+
+    /// 状态来源。
+    public enum StateSource: Equatable {
+        case manual      // 用户手动触发场景
+        case autoMusic   // 系统检测到播放音乐
+        case autoScreen  // 系统检测到息屏
+    }
 
     public init(profile: ProfileStore, achievements: AchievementStore) {
         self.profile = profile
@@ -46,17 +60,83 @@ public final class PetStore: ObservableObject {
         startTicker()
         startKeepAlive()
         resetIdleTimer()
+        bindDetector()
+    }
+
+    // MARK: - 自动检测接入
+
+    private func bindDetector() {
+        detector.onEvent = { [weak self] event in
+            Task { @MainActor in self?.handleSystemEvent(event) }
+        }
+        if detector.autoDetectionEnabled { detector.start() }
+    }
+
+    /// 处理真实系统事件：自动状态优先于手动。
+    private func handleSystemEvent(_ event: DetectedSystemEvent) {
+        switch event {
+        case .playingMusic(let title, let artist):
+            // 自动听歌：打断当前任何状态（含手动），进入摇摆
+            autoStateActive = true
+            stateSource = .autoMusic
+            let t = title ?? PetState.music.defaultTitle
+            let s = artist ?? NSLocalizedString("music.swing", value: "跟随节奏摇摆", comment: "")
+            enterInternal(.music, title: String(format: NSLocalizedString("fmt.listening", value: "正在听: %@", comment: ""), t), subtitle: s)
+            cancelIdleTimer()
+        case .stoppedMusic:
+            guard stateSource == .autoMusic else { return }
+            autoStateActive = false
+            stateSource = .manual
+            backToIdleOrSleep()
+        case .screenDimmed:
+            // 息屏打盹：自动进入 sleeping（即便用户在手动场景，息屏也优先生效）
+            autoStateActive = true
+            stateSource = .autoScreen
+            enterInternal(.sleeping,
+                          title: PetState.sleeping.defaultTitle,
+                          subtitle: NSLocalizedString("sleep.hint", value: "嘘，它在打盹…", comment: ""))
+            cancelIdleTimer()
+        case .screenAwake:
+            guard stateSource == .autoScreen else { return }
+            autoStateActive = false
+            stateSource = .manual
+            backToIdleOrSleep()
+        }
+    }
+
+    /// 切回待机，或自动打盹（视空闲时长）。
+    private func backToIdleOrSleep() {
+        enterInternal(.idle, title: PetState.idle.defaultTitle, subtitle: "")
+        resetIdleTimer()
+    }
+
+    /// 内部切换：不区分来源，统一更新状态与灵动岛，不发触感（自动事件免打扰）。
+    private func enterInternal(_ state: PetState, title: String, subtitle: String) {
+        flushCurrentDuration()
+        currentState = state
+        stateStartedAt = Date()
+        scenarioTitle = title
+        scenarioSubtitle = subtitle
+        achievements.collect(state: state)
+        updateOrStartLiveActivity(for: state)
+        checkPetUnlocks()
     }
 
     // MARK: - 状态切换
 
-    /// 进入指定场景状态，并（可选）启动灵动岛展示。
+    /// 手动进入指定场景状态。
+    /// 若当前处于自动检测状态（听歌/息屏），手动操作会被忽略，避免打断真实系统状态。
     public func enter(_ state: PetState,
                       title: String = "",
                       subtitle: String = "",
                       presentLiveActivity: Bool = true) {
+        // 自动状态激活时，手动场景让位（除非用户切换的就是结束当前手动场景）
+        if autoStateActive {
+            return
+        }
         flushCurrentDuration()
         currentState = state
+        stateSource = .manual
         stateStartedAt = Date()
         scenarioTitle = title.isEmpty ? state.defaultTitle : title
         scenarioSubtitle = subtitle
@@ -75,9 +155,15 @@ public final class PetStore: ObservableObject {
 
     /// 结束当前场景，回到待机。
     /// 开启常驻时仅把灵动岛更新为待机，**不结束** Live Activity，让小猫一直留在灵动岛。
+    /// 自动检测激活时，结束操作只复位手动状态，不打断自动状态。
     public func endScenario() {
+        if autoStateActive {
+            // 自动状态在跑，手动"结束"无意义，直接返回
+            return
+        }
         flushCurrentDuration()
         currentState = .idle
+        stateSource = .manual
         stateStartedAt = Date()
         scenarioTitle = PetState.idle.defaultTitle
         scenarioSubtitle = ""
@@ -119,14 +205,20 @@ public final class PetStore: ObservableObject {
         }
     }
 
+    private func cancelIdleTimer() {
+        idleTask?.cancel()
+        idleTask = nil
+    }
+
     private func fallAsleep() {
         guard currentState == .idle else { return }
         flushCurrentDuration()
         currentState = .sleeping
+        stateSource = .manual
         stateStartedAt = Date()
         scenarioTitle = PetState.sleeping.defaultTitle
         scenarioSubtitle = NSLocalizedString("sleep.hint", value: "嘘，它在打盹…", comment: "")
-        updateLiveActivity(to: .sleeping, title: scenarioTitle, subtitle: scenarioSubtitle)
+        updateOrStartLiveActivity(for: .sleeping)
     }
 
     // MARK: - 时长上报

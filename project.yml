@@ -48,6 +48,7 @@ targets:
     dependencies:
       - target: PocketPetWidgets
         embed: true
+      - sdk: MediaPlayer.framework
 
   PocketPetWidgets:
     type: app-extension

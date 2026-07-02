@@ -22,9 +22,12 @@ struct HomeView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(store.pet.name).font(.title2).bold()
-                Text(store.pet.species.displayName + " · " + store.currentState.displayName)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text(store.pet.species.displayName + " · " + store.currentState.displayName)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    sourceBadge
+                }
             }
             Spacer()
             VStack(spacing: 2) {
@@ -34,6 +37,28 @@ struct HomeView: View {
             }
         }
         .padding(.horizontal, 4)
+    }
+
+    /// 状态来源徽章：自动 / 手动。
+    private var sourceBadge: some View {
+        Group {
+            switch store.stateSource {
+            case .autoMusic:
+                Label("auto.music", systemImage: "waveform")
+                    .labelStyle(.titleAndIcon)
+                    .font(.caption2)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(Color.yellow.opacity(0.2), in: Capsule())
+            case .autoScreen:
+                Label("auto.screen", systemImage: "moon.zzz")
+                    .labelStyle(.titleAndIcon)
+                    .font(.caption2)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(Color.blue.opacity(0.2), in: Capsule())
+            case .manual:
+                EmptyView()
+            }
+        }
     }
 
     private var petStage: some View {
