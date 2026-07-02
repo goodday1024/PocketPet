@@ -17,7 +17,7 @@ struct PocketPetApp: App {
                 .environmentObject(store)
                 .environmentObject(store.profile)
                 .environmentObject(store.achievements)
-                .onChange(of: scenePhase) { _, phase in
+                .onChange(of: scenePhase) { phase in
                     // App 回到前台时，确保小猫仍在灵动岛上（系统可能已结束过期的 LA）。
                     if phase == .active {
                         store.ensureLiveActivity()
